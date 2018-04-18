@@ -1,0 +1,3 @@
+1) gensim insert from wiki (xml dumps: https://dumps.wikimedia.org/enwiki/latest/)
+    example: python -m gensim.scripts.make_wikicorpus C:\Users\roman.baldaev\PycharmProjects\ElasticSearchTest\venv\Lib\site-packages\gensim\results\enwiki-latest-pages-articles10.xml-p2336425p3046511.bz \
+             2 C:\Users\roman.baldaev\PycharmProjects\ElasticSearchTest\venv\Lib\site-packages\gensim\results\wiki
