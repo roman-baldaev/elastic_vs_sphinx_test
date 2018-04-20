@@ -1,21 +1,21 @@
 from datetime import datetime
 from elasticsearch_dsl import DocType, Date, Integer, Keyword, Text
-from elasticsearch_dsl.connections import connections
+from elasticsearch_dsl.connections import create_connection
 
-connections.create_connections(hosts=['localhost'])
+create_connection(hosts=['localhost'])
 
 
-class ArticleNews(DocType):
+class News(DocType):
     title = Text(analyzer='snowball', fields={'raw': Keyword()})
-    author = Text(analyzer='snowball', fields={'raw': Keyword()})
-    body = Text(analyzer='snowball')
+    content = Text(analyzer='snowball')
+    original_id = Integer()
     published_from = Date()
 
     class Meta:
-        index = 'news'
+        index = 'news100gb'
 
     def save(self, **kwargs):
-        return super(ArticleNews, self).save(**kwargs)
+        return super(News, self).save(**kwargs)
 
     def is_published(self):
         return datetime.now() >= self.published_from
@@ -23,4 +23,4 @@ class ArticleNews(DocType):
 
 if __name__ == '__main__':
     # create mapping in ES
-    ArticleNews.init()
+    News.init()

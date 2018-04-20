@@ -1,14 +1,23 @@
 from abc import abstractmethod, ABC
+from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Search, Q
+from time import clock
+import pandas as pd
 
+class SearchTest(ABC):
 
-class Test(ABC):
-
-    def __init__(self, object_test_name, *args):
+    def __init__(self, object_test_name, path_to_object):
         self.object_test_name = object_test_name
-        self.pieces_with_different_size = args
+        self.path_to_object = path_to_object
+        self.client = Elasticsearch()
+
+    @property
+    @classmethod
+    def test_name(cls):
+        return cls.__name__
 
     @abstractmethod
-    def search_string(self, str):
+    def search_substring(self, substrings, field):
         ...
 
     @property
@@ -18,17 +27,73 @@ class Test(ABC):
 
     @property
     @abstractmethod
-    def size_distribution(self):
+    def distribution_size_of_docs(self):
         ...
 
     @abstractmethod
-    def size_of_piece(self, piece):
+    def show_results(self):
         ...
 
-    def sizes_of_all_pieces(self):
-        sizes = {}
+    @abstractmethod
+    def size_of_object(self):
+        ...
 
-        for piece in self.pieces_with_different_size:
-            sizes[piece] = self.size_of_piece(piece)
+# class ElastisearchTest(SearchTest):
 
+class SearchTestElastic(SearchTest):
 
+    def search_substring(self, substrings, _field):
+        #will do DataFrame object
+        times = []
+        results = {}
+        for substring in substrings:
+            return_id = []
+            start = clock()
+            s = Search().using(self.client).query("match", content=substring)
+            end = clock() - start
+            times.append(end)
+            response = s.execute()
+            print(response)
+            for hit in s.scan():
+                return_id.append(hit.original_id)
+            results[substring] = return_id
+        self.times = times
+        self.results = results
+
+    def search_substrings_or(self, substrings):
+
+        start = clock()
+        q = Q("match", content=substrings[0])
+        for substring in substrings[1:]:
+            q = q | Q("match", content=substring)
+        s = Search().using(self.client).query(q)
+        s.execute()
+        end = clock() - start
+        i = 0
+        a = []
+        for hit in s.scan():
+            print(hit.original_id)
+            a.append(hit.original_id)
+            i += 1
+        print("Len {}".format(len(a)))
+        print(end)
+    def show_results(self):
+        if self.times and self.results:
+            print(self.results)
+            print(self.times)
+    def test_results(self):
+        return (self.times, self.results)
+
+    def size_of_object(self, index):
+        s = Search(index=index).using(self.client)
+
+        s.execute()
+        s = s.scan()
+        response = s
+        size = 0
+        for hit in response:
+            size += len(hit.content)
+        self.size = ((size/1024)/1024)
+
+    def distribution_size_of_docs(self):
+        return 0
