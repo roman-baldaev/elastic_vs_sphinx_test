@@ -4,12 +4,18 @@ from elasticsearch_dsl import Search, Q
 from time import clock
 import pandas as pd
 
+
 class SearchTest(ABC):
 
     def __init__(self, object_test_name, path_to_object):
         self.object_test_name = object_test_name
         self.path_to_object = path_to_object
         self.client = Elasticsearch()
+        self.times = None
+        self.results = None
+        self.size = None
+
+        self.hash_results = None
 
     @property
     @classmethod
@@ -34,16 +40,21 @@ class SearchTest(ABC):
     def show_results(self):
         ...
 
+    @property
     @abstractmethod
     def size_of_object(self):
         ...
 
 # class ElastisearchTest(SearchTest):
 
-class SearchTestElastic(SearchTest):
 
+class SearchTestElastic(SearchTest):
+    """
+    'object_test_name' for Elasticsearch its name of index
+    'path_to_object' is the address of the server
+    """
     def search_substring(self, substrings, _field):
-        #will do DataFrame object
+        # will do DataFrame object
         times = []
         results = {}
         for substring in substrings:
@@ -77,15 +88,18 @@ class SearchTestElastic(SearchTest):
             i += 1
         print("Len {}".format(len(a)))
         print(end)
+
     def show_results(self):
         if self.times and self.results:
             print(self.results)
             print(self.times)
-    def test_results(self):
-        return (self.times, self.results)
 
-    def size_of_object(self, index):
-        s = Search(index=index).using(self.client)
+    def test_results(self):
+        if (self.times is not None) and (self.results is not None):
+            return self.times, self.results
+
+    def size_of_object(self):
+        s = Search(index=self.object_test_name).using(self.client)
 
         s.execute()
         s = s.scan()
