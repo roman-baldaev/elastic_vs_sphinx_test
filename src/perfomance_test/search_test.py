@@ -2,20 +2,21 @@ from abc import abstractmethod, ABC
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q
 from time import clock
-import pandas as pd
+from pandas import read_csv
+from pandas import DataFrame
+from pandas import concat
 
 
 class SearchTest(ABC):
 
-    def __init__(self, object_test_name, path_to_object):
+    def __init__(self, object_test_name, file_for_save):
         self.object_test_name = object_test_name
-        self.path_to_object = path_to_object
-        self.client = Elasticsearch()
-        self.times = None
+        self.file_for_save = file_for_save
+        self.time = None
         self.results = None
         self.size = None
-
-        self.hash_results = None
+        self.date = None
+        self.query = None
 
     @property
     @classmethod
@@ -31,11 +32,6 @@ class SearchTest(ABC):
     def test_results(self):
         ...
 
-    @property
-    @abstractmethod
-    def distribution_size_of_docs(self):
-        ...
-
     @abstractmethod
     def show_results(self):
         ...
@@ -45,31 +41,40 @@ class SearchTest(ABC):
     def size_of_object(self):
         ...
 
-# class ElastisearchTest(SearchTest):
-
 
 class SearchTestElastic(SearchTest):
     """
     'object_test_name' for Elasticsearch its name of index
     'path_to_object' is the address of the server
     """
-    def search_substring(self, substrings, _field):
-        # will do DataFrame object
-        times = []
-        results = {}
+    def __init__(self):
+        self.client = Elasticsearch()
+
+    def __save__(self):
+        _columns = ['index', 'size', 'query', 'time', 'date', 'percent']
+        data = [self.object_test_name, self.size, self.query, self.time, '52%']
+
+        source = read_csv(self.file_for_save)
+        dataframe_for_save = DataFrame([data], columns=_columns)
+        _sum = concat([source, dataframe_for_save], ignore_index=True)
+
+        _sum.to_csv(self.file_for_save, index=False)
+
+    def search_substring(self, substrings, _index):
+        # results = {}
+
         for substring in substrings:
             return_id = []
             start = clock()
-            s = Search().using(self.client).query("match", content=substring)
+            s = Search().using(self.client, index=_index).query("match", content=substring)
             end = clock() - start
-            times.append(end)
-            response = s.execute()
-            print(response)
+            self.time = end
+            # response = s.execute()
             for hit in s.scan():
                 return_id.append(hit.original_id)
             results[substring] = return_id
-        self.times = times
-        self.results = results
+
+        # self.results = results
 
     def search_substrings_or(self, substrings):
 
@@ -98,8 +103,8 @@ class SearchTestElastic(SearchTest):
         if (self.times is not None) and (self.results is not None):
             return self.times, self.results
 
-    def size_of_object(self):
-        s = Search(index=self.object_test_name).using(self.client)
+    def size_of_object(self, _index):
+        s = Search(index=_index).using(self.client)
 
         s.execute()
         s = s.scan()
@@ -108,6 +113,3 @@ class SearchTestElastic(SearchTest):
         for hit in response:
             size += len(hit.content)
         self.size = ((size/1024)/1024)
-
-    def distribution_size_of_docs(self):
-        return 0
