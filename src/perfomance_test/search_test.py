@@ -5,11 +5,11 @@ from time import clock
 from pandas import read_csv
 from pandas import DataFrame
 from pandas import concat
-
+import json
 
 class SearchTest(ABC):
 
-    def __init__(self, object_test_name, file_for_save):
+    def __init__(self, file_for_save, object_test_name=None):
         self.object_test_name = object_test_name
         self.file_for_save = file_for_save
         self.time = None
@@ -17,6 +17,7 @@ class SearchTest(ABC):
         self.size = None
         self.date = None
         self.query = None
+        self.total = None
 
     @property
     @classmethod
@@ -47,12 +48,13 @@ class SearchTestElastic(SearchTest):
     'object_test_name' for Elasticsearch its name of index
     'path_to_object' is the address of the server
     """
-    def __init__(self):
-        self.client = Elasticsearch()
+    def __init__(self, *args, **kwargs):
+        super(SearchTestElastic, self).__init__(*args, **kwargs)
+        self.client = Elasticsearch(timeout=30)
 
     def __save__(self):
-        _columns = ['index', 'size', 'query', 'time', 'date', 'percent']
-        data = [self.object_test_name, self.size, self.query, self.time, '52%']
+        _columns = ['index', 'size', 'query', 'time', 'total']
+        data = [self.object_test_name, self.size, self.query, self.time, self.total]
 
         source = read_csv(self.file_for_save)
         dataframe_for_save = DataFrame([data], columns=_columns)
@@ -62,17 +64,22 @@ class SearchTestElastic(SearchTest):
 
     def search_substring(self, substrings, _index):
         # results = {}
+        self.size = 3221
+        self.object_test_name = _index
 
         for substring in substrings:
-            return_id = []
+
             start = clock()
-            s = Search().using(self.client, index=_index).query("match", content=substring)
+            s = Search(index=_index).using(self.client).query("match", content=substring)
+            response = s.execute(ignore_cache=True)
+
             end = clock() - start
             self.time = end
-            # response = s.execute()
-            for hit in s.scan():
-                return_id.append(hit.original_id)
-            results[substring] = return_id
+            self.query = substring
+            self.total = response.hits.total
+            self.__save__()
+
+            # results[substring] = return_id
 
         # self.results = results
 
@@ -110,6 +117,20 @@ class SearchTestElastic(SearchTest):
         s = s.scan()
         response = s
         size = 0
+        length = 0
         for hit in response:
-            size += len(hit.content)
-        self.size = ((size/1024)/1024)
+            length += 1
+            print(hit.to_dict()['message'].to_dict())
+        self.size = ((size / 1024) / 1024)
+        return self.size
+
+    def from_logstash_message(self, _index):
+        s = Search(index=_index).using(self.client).query("match", message="hello")
+
+        s.execute()
+        s = s.scan()
+        response = s
+
+        for hit in response:
+            data = json.loads(hit.message)
+            print(data['content'])
