@@ -4,6 +4,7 @@ from elasticsearch_dsl.connections import create_connection
 
 create_connection(hosts=['localhost'], timeout=1000000)
 
+
 def fill_from_csv(file_path):
 
     data = read_csv(file_path)
