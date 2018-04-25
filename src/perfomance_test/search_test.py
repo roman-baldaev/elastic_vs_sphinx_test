@@ -5,6 +5,7 @@ from time import clock
 from pandas import read_csv
 from pandas import DataFrame
 from pandas import concat
+from math import floor
 
 
 class SearchTest(ABC):
@@ -64,7 +65,8 @@ class SearchTestElastic(SearchTest):
     """
     def __init__(self, timeout=10, *args, **kwargs):
         super(SearchTestElastic, self).__init__(*args, **kwargs)
-        self.client = Elasticsearch(timeout)
+        self.timeout = timeout
+        self.client = Elasticsearch(timeout=timeout)
 
     def search_substring(self, substrings, _index):
         """
@@ -155,7 +157,7 @@ class SearchTestElastic(SearchTest):
         for hit in response:
             size += len(hit[field])
         # return size (MB)
-        self.size = ((size / 1024) / 1024)
+        self.size = floor(((size / 1024) / 1024))
         return self.size
 
 
