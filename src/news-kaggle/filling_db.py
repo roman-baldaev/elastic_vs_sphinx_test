@@ -6,7 +6,10 @@ create_connection(hosts=['localhost'], timeout=1000000)
 
 
 def fill_from_csv(file_path):
-
+    """
+    Method for saving data from a file to ES by saving an instance of a class
+    :param file_path: path to CSV-file
+    """
     data = read_csv(file_path)
     n = len(data)
     for j in range(1000):
@@ -21,5 +24,6 @@ def fill_from_csv(file_path):
             print("Part: {} News: {}".format(j, i))
     return 0
 
-
-fill_from_csv('/home/roman/Projects/ElasticMongoTest/src/news-kaggle/datasets/articles3.csv')
+if __name__=="__main__":
+    #simple test
+    fill_from_csv('/home/roman/Projects/ElasticMongoTest/src/news-kaggle/datasets/articles3.csv')

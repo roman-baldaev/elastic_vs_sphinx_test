@@ -6,6 +6,9 @@ create_connection(hosts=['localhost'])
 
 
 class News(DocType):
+    """
+    Class for define mapping in ES
+    """
     title = Text(analyzer='snowball', fields={'raw': Keyword()})
     content = Text(analyzer='snowball')
     original_id = Integer()

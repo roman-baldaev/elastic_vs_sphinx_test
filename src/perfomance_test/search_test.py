@@ -11,6 +11,7 @@ class SearchTest(ABC):
     """
     An abstract class that defines the basic interface for search tests in various objects(Elastic, MongoDB).
     'file_for_save' - path to CSV-file for save tests results
+    'object_test_name' - object name, for example object name for Elastic its index name
     'time' - time of executing search query
     'size' - size of test object
     'query' - search query in human readable form
@@ -67,8 +68,9 @@ class SearchTestElastic(SearchTest):
 
     def search_substring(self, substrings, _index):
         """
-        Search all 'substrings' in 'index' ES
-        :param substrings: substrings list
+        Search for documents in the index that contain lines from 'substrings'
+        (a separate search for each substring)
+        :param substrings: substring list
         :param _index: ES index
         """
 
@@ -84,16 +86,25 @@ class SearchTestElastic(SearchTest):
 
             self.time = end
             self.query = substring
+            # response.hits.total - number of document found
             self.total = response.hits.total
             self.__save__()
 
     def search_substrings_or(self, substrings, _index):
-
+        """
+        Search for documents that contain at least one substring from the list.
+        (search for a disjunction of all substrings from 'substrings'
+        :param substrings: substring list
+        :param _index: ES index
+        :return:
+        """
         start = clock()
+        # create the first query object, then add other queries to it using the 'or' operation
         q = Q("match", content=substrings[0])
         for substring in substrings[1:]:
             q = q | Q("match", content=substring)
 
+        # create search object from 'q' query object
         s = Search(index=_index).using(self.client).query(q)
         response = s.execute()
         end = clock() - start
@@ -105,12 +116,19 @@ class SearchTestElastic(SearchTest):
         self.__save__()
 
     def search_substrings_and(self, substrings, _index):
-
+        """
+        Search for documents containing all substrings from the input list.
+        (search for a conjunction of all substrings from 'substrings'
+        :param substrings: substring list
+        :param _index: ES index
+        """
         start = clock()
+        # create the first query object, then add other queries to it using the 'and' operation
         q = Q("match", content=substrings[0])
         for substring in substrings[1:]:
             q = q & Q("match", content=substring)
 
+        # create search object from 'q' query object
         s = Search(index=_index).using(self.client).query(q)
         response = s.execute()
         end = clock() - start
@@ -122,13 +140,21 @@ class SearchTestElastic(SearchTest):
         self.__save__()
 
     def size_of_object(self, index, field):
+        """
+        Calculating the size of the entire index field 'field'
+        :param index: ES index
+        :param field: field of index
+        """
+        # search for all docs from index
         s = Search(index=index).using(self.client)
         s.execute()
         s = s.scan()
         response = s
         size = 0
+        # calculate the number of symbols in every doc
         for hit in response:
             size += len(hit[field])
+        # return size (MB)
         self.size = ((size / 1024) / 1024)
         return self.size
 

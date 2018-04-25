@@ -13,7 +13,7 @@ if __name__ == "__main__":
     #                        'good', 'kosdfsd', 'luck'], 'news100gb')
 
     # print(test.size_of_object('news10gb'))
-    test.from_logstash_message('news10gb')
+    test.size_of_object('news5gb', 'message')
     # test.search_substrings_or(['MTV', 'London'],
     #                           )
 
