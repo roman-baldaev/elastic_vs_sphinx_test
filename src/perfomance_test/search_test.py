@@ -64,7 +64,8 @@ class SearchTestElastic(SearchTest):
     """
     def __init__(self, timeout=10, *args, **kwargs):
         super(SearchTestElastic, self).__init__(*args, **kwargs)
-        self.client = Elasticsearch(timeout)
+        self.timeout = timeout
+        self.client = Elasticsearch(timeout=self.timeout)
 
     def search_substring(self, substrings, _index):
         """

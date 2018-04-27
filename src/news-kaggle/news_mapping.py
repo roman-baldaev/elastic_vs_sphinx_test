@@ -9,19 +9,22 @@ class News(DocType):
     """
     Class for define mapping in ES
     """
+    id = Integer()
     title = Text(analyzer='snowball', fields={'raw': Keyword()})
+    publication = Text(analyzer='snowball', fields={'raw': Keyword()})
+    author = Text(analyzer='snowball', fields={'raw': Keyword()})
+    date = Date()
+    year = Integer()
+    month = Text(analyzer='snowball', fields={'raw': Keyword()})
+    url = Text(analyzer='snowball', fields={'raw': Keyword()})
     content = Text(analyzer='snowball')
-    original_id = Integer()
-    published_from = Date()
+
 
     class Meta:
-        index = 'news100gb'
+        index = 'news14gb'
 
     def save(self, **kwargs):
         return super(News, self).save(**kwargs)
-
-    def is_published(self):
-        return datetime.now() >= self.published_from
 
 
 if __name__ == '__main__':
