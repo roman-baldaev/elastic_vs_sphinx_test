@@ -6,7 +6,7 @@ from pandas import read_csv
 from pandas import DataFrame
 from pandas import concat
 from math import floor
-
+import sphinxsearch as sphinx
 
 class SearchTest(ABC):
     """
@@ -66,11 +66,7 @@ class SearchTestElastic(SearchTest):
     def __init__(self, timeout=10, *args, **kwargs):
         super(SearchTestElastic, self).__init__(*args, **kwargs)
         self.timeout = timeout
-<<<<<<< HEAD
         self.client = Elasticsearch(timeout=self.timeout)
-=======
-        self.client = Elasticsearch(timeout=timeout)
->>>>>>> 8ad00506045d7c77c4bf05272bb47a2003832f2e
 
     def search_substring(self, substrings, _index):
         """
@@ -164,4 +160,15 @@ class SearchTestElastic(SearchTest):
         self.size = floor(((size / 1024) / 1024))
         return self.size
 
+
+class SearchTestSphinx(SearchTest):
+    def __init__(self, timeout=10, server='localhost', port=9312, *args, **kwargs):
+        super(SearchTestSphinx, self).__init__(*args, **kwargs)
+        sphinx.SetServer(server, port)
+        sphinx.SetConnectTimeout(timeout)
+
+    def search_substring(self, substrings, index):
+        sphinx.SetMatchMode(sphinx.SPH_MATCH_ALL)
+        sphinx.Query(index)
+        sphinx.RunQueries()
 
