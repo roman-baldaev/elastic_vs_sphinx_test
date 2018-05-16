@@ -161,14 +161,3 @@ class SearchTestElastic(SearchTest):
         return self.size
 
 
-class SearchTestSphinx(SearchTest):
-    def __init__(self, timeout=10, server='localhost', port=9312, *args, **kwargs):
-        super(SearchTestSphinx, self).__init__(*args, **kwargs)
-        sphinx.SetServer(server, port)
-        sphinx.SetConnectTimeout(timeout)
-
-    def search_substring(self, substrings, index):
-        sphinx.SetMatchMode(sphinx.SPH_MATCH_ALL)
-        sphinx.Query(index)
-        sphinx.RunQueries()
-

@@ -2,6 +2,9 @@ from datetime import datetime
 from elasticsearch_dsl import DocType, Date, Integer, Keyword, Text
 from elasticsearch_dsl.connections import create_connection
 
+"""
+    Mapping for news from Kaggle dataset
+"""
 create_connection(hosts=['localhost'])
 
 
